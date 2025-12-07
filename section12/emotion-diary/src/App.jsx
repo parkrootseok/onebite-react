@@ -4,27 +4,25 @@ import Diary from "./pages/diary";
 import Home from "./pages/home";
 import New from "./pages/new";
 import NotFound from "./pages/NotFound";
-import Button from "./components/Button";
-import Header from "./components/Header";
 import Edit from "./pages/Edit";
 import { createContext, useReducer, useRef } from "react";
 
 const mockData = [
   {
     id: 1,
-    createdDate: new Date().getTime(),
+    createdDate: new Date("2025-12-07").getTime(),
     emotionId: 1,
     content: "1번 일기 내용",
   },
   {
     id: 2,
-    createdDate: new Date().getTime(),
+    createdDate: new Date("2025-12-06").getTime(),
     emotionId: 2,
     content: "2번 일기 내용",
   },
   {
     id: 3,
-    createdDate: new Date().getTime(),
+    createdDate: new Date("2025-11-07").getTime(),
     emotionId: 3,
     content: "3번 일기 내용",
   },
@@ -59,7 +57,7 @@ function reducer(state, action) {
   - 일기 데이터 배열 자체를 내려주는 Context
   - 어떤 컴포넌트에서든 이 Context를 구독하면 현재 일기 목록을 읽을 수 있음
 */
-const DiaryStateContext = createContext();
+export const DiaryStateContext = createContext();
 
 /* 
   DiaryDispatchContext
@@ -67,7 +65,7 @@ const DiaryStateContext = createContext();
   - 상태 읽기와 액션 호출을 분리하기 위해 상태용 Context와 분리해서 설계함
   - 이렇게 분리하면 불필요한 리렌더를 줄이는 데도 도움이 됨
 */
-const DiaryDispatchContext = createContext();
+export const DiaryDispatchContext = createContext();
 
 function App() {
   /* 
@@ -165,13 +163,6 @@ function App() {
 
       <button onClick={onClickButton}>New 페이지로 이동</button> 
       */}
-
-      {/* Header 컴포넌트 */}
-      <Header
-        title={"Header"}
-        leftchild={<Button text={"Left"} />}
-        rightchild={<Button text={"Right"} />}
-      />
 
       {/* 
         Context Provider 구조
