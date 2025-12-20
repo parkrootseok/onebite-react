@@ -5,28 +5,14 @@ import Home from "./pages/home";
 import New from "./pages/new";
 import NotFound from "./pages/NotFound";
 import Edit from "./pages/Edit";
-import { createContext, useReducer, useRef } from "react";
-
-const mockData = [
-  {
-    id: 1,
-    createdDate: new Date("2025-12-07").getTime(),
-    emotionId: 1,
-    content: "1번 일기 내용",
-  },
-  {
-    id: 2,
-    createdDate: new Date("2025-12-06").getTime(),
-    emotionId: 2,
-    content: "2번 일기 내용",
-  },
-  {
-    id: 3,
-    createdDate: new Date("2025-11-07").getTime(),
-    emotionId: 3,
-    content: "3번 일기 내용",
-  },
-];
+import {
+  act,
+  createContext,
+  useEffect,
+  useReducer,
+  useRef,
+  useState,
+} from "react";
 
 /* 
   reducer(state, action)
@@ -38,18 +24,32 @@ const mockData = [
       - action.data 또는 action.id: 동작에 필요한 추가 데이터
 */
 function reducer(state, action) {
+  let nextState;
+
   switch (action.type) {
-    case "CREATE":
-      return [action.data, ...state];
-    case "UPDATE":
-      return state.map((item) =>
+    case "INIT": {
+      return action.data;
+    }
+    case "CREATE": {
+      nextState = [action.data, ...state];
+      break;
+    }
+    case "UPDATE": {
+      nextState = state.map((item) =>
         String(item.id) === String(action.data.id) ? action.data : item
       );
-    case "DELETE":
-      return state.filter((item) => String(item.id) !== String(action.id));
+      break;
+    }
+    case "DELETE": {
+      nextState = state.filter((item) => String(item.id) !== String(action.id));
+      break;
+    }
     default:
       return state;
   }
+
+  localStorage.setItem("diary", JSON.stringify(nextState));
+  return nextState;
 }
 
 /* 
@@ -68,6 +68,8 @@ export const DiaryStateContext = createContext();
 export const DiaryDispatchContext = createContext();
 
 function App() {
+  const [isLoading, setIsLoading] = useState(true);
+
   /* 
     useNavigate()
     - react-router-dom에서 제공하는 훅
@@ -95,7 +97,7 @@ function App() {
     - useRef는 값이 바뀌어도 컴포넌트가 리렌더링되지 않는 특징이 있음
       - 단순히 증가만 시키고 화면에 직접 그리지 않을 때 적합한 방식
   */
-  const idRef = useRef(4);
+  const idRef = useRef(0);
 
   /* 
     useReducer(reducer, mockData)
@@ -108,7 +110,36 @@ function App() {
     - 일기 생성, 수정, 삭제처럼 서로 연관된 상태 변경 로직을 한 곳(reducer)에서 깔끔하게 관리하기 위함
     - 상태 변경 패턴이 복잡해질수록 useState 여러 개보다 useReducer가 가독성이 좋음
   */
-  const [data, dispatch] = useReducer(reducer, mockData);
+  const [data, dispatch] = useReducer(reducer, []);
+
+  useEffect(() => {
+    const storedDiary = localStorage.getItem("diary");
+    if (!storedDiary) {
+      return;
+    }
+
+    const parsedDiary = JSON.parse(storedDiary);
+    if (!Array.isArray(parsedDiary)) {
+      setIsLoading(false);
+      return;
+    }
+
+    let maxId = 0;
+    parsedDiary.forEach((item) => {
+      if (Number(item.id) > maxId) {
+        maxId = Number(item.id);
+      }
+    });
+
+    idRef.current = maxId + 1;
+
+    dispatch({
+      type: "INIT",
+      data: parsedDiary,
+    });
+
+    setIsLoading(false);
+  }, []);
 
   const onCreate = (createdDate, emotionId, content) => {
     dispatch({
@@ -140,6 +171,10 @@ function App() {
       id,
     });
   };
+
+  if (isLoading) {
+    return <div>데이터 로딩중..!</div>;
+  }
 
   return (
     <>
